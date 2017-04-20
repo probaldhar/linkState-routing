@@ -26,6 +26,9 @@
 
 #include	"node.h"
 
+// global adjacency matrix
+int **adjMat;
+
 int main(int argc,  char *argv[] ) {
 
 	// For return values for socket creation, send & receive message
@@ -74,7 +77,11 @@ int main(int argc,  char *argv[] ) {
 	//converting totalNumRouters - string to int
 	int rowCol = atoi(totalNumRouters);
 	// adjacency matrix
-	int adjMat[rowCol][rowCol];
+
+	// dynamic memory allocation for adjacency matrix
+	adjMat = (int **)malloc(rowCol * sizeof(int *));
+	for ( i = 0; i < rowCol; i++ )
+		 adjMat[i] = (int *)malloc(rowCol * sizeof(int));
 
 	// assign -1 to each of the record of adjMat
 	for ( i = 0; i < rowCol; i++ ) {
@@ -89,8 +96,6 @@ int main(int argc,  char *argv[] ) {
 			// printf("%d %d\n", i, k);
 		}
 	}
-	adjMat[rowCol-1][rowCol-1] = 0;
-	// printf("%d", rowCol-1);
 
 printf("matrix check\n");
 	printArray(rowCol, adjMat);
@@ -101,6 +106,7 @@ printf("matrix check\n");
 		exit(1);
 	}	
 
+	// printing the arguments
 	printf("Testing: %s %s %s %s\n", rounterLabel, portNum, totalNumRouters, discoverFile);
 
 
@@ -118,12 +124,6 @@ printf("matrix check\n");
 	// get network host entry
     // hostptr = gethostbyname(hostname);
     hostptr = gethostbyname("127.0.0.1");
-	
-	// server's address
-	// memset( &serveraddress, 0, sizeof(serveraddress) );
-	// serveraddress.sin_family = AF_INET;
-	// serveraddress.sin_port = htons(atoi(hostPort));//PORT NO
-	// serveraddress.sin_addr.s_addr = inet_addr(hostIP);//ADDRESS
 
 	// setting memory to recvAddress 
 	memset( &recvAddress, 0, sizeof(recvAddress) );
@@ -176,7 +176,7 @@ printf("matrix check\n");
 		/********* LSP create for each record in the file *********/
 
 		// copying source router's label to allLSP
-		strcpy(allLSP.singleLSP[neighborCounter].source, rounterLabel);
+		// strcpy(allLSP.singleLSP[neighborCounter].source, rounterLabel);
 		// hop counter
 		allLSP.singleLSP[neighborCounter].hop = atoi(totalNumRouters) - 1;
 		// sequence number, initially 1
@@ -219,15 +219,20 @@ printf("matrix check\n");
 	// assign the number of neighbor in the LSP packet
 	allLSP.numberOfNeighbor = neighborCounter;
 
+	// assigning hop count to packet
+	allLSP.hopCount = atoi(totalNumRouters) - 1;
+
+	strcpy(allLSP.source, rounterLabel);
+
 	// packet from FILE
 	int j;
 	for ( j = 0; j < neighborCounter; j++ ) {
 
 		// initial matrix build
-		adjMatrixChange( adjMat, allLSP.singleLSP[j].source, allLSP.singleLSP[j].label, allLSP.singleLSP[j].cost );
+		adjMatrixChange( adjMat, allLSP.source, allLSP.singleLSP[j].label, allLSP.singleLSP[j].cost );
 
 		// printing the values of LSPs
-		printf("%s %d %d %s %s %d %d\n", allLSP.singleLSP[j].source, allLSP.singleLSP[j].hop, allLSP.singleLSP[j].seqNum, allLSP.singleLSP[j].label, allLSP.singleLSP[j].nodeIP, allLSP.singleLSP[j].nodePort, allLSP.singleLSP[j].cost);
+		printf("%s %d %d %s %s %d %d\n", allLSP.source, allLSP.singleLSP[j].hop, allLSP.singleLSP[j].seqNum, allLSP.singleLSP[j].label, allLSP.singleLSP[j].nodeIP, allLSP.singleLSP[j].nodePort, allLSP.singleLSP[j].cost);
 
 		// sockaddr_in create for each record in the file
 		memset( &neighbors[j], 0, sizeof(neighbors[j]) );
@@ -250,69 +255,105 @@ printf("matrix check\n");
 
 	}
 
-
-	printArray(neighborCounter+1, adjMat);
+	// printing adjacency matrix so far
+	printArray(rowCol, adjMat);
 
 	/***** LOOP START *****/ // for receive & send
 
-	// select system call
-	// add our descriptors to the set
-	FD_ZERO(&readfds);
-    FD_SET(nodeSd, &readfds);
+	while (1) {
 
-    // the highest-numbered file descriptor
-    numfd = nodeSd + 1;
+		// select system call
+		// add our descriptors to the set
+		FD_ZERO(&readfds);
+	    FD_SET(nodeSd, &readfds);
 
-    /* Wait up to five seconds. */
-    tv.tv_sec = 5;
-    tv.tv_usec = 0;
+	    // the highest-numbered file descriptor
+	    numfd = nodeSd + 1;
 
-    // checking return value of select
-    retval = select(numfd, &readfds, NULL, NULL, &tv);
-    /* Don't rely on the value of tv now! */
+	    /* Wait up to five seconds. */
+	    tv.tv_sec = 5;
+	    tv.tv_usec = 0;
 
-    if (retval == -1)
-    	perror("select()");
-    else if (retval) {
-    	printf("Data is available now.\n");
+	    // checking return value of select
+	    retval = select(numfd, &readfds, NULL, NULL, &tv);
+	    /* Don't rely on the value of tv now! */
 
-        // receive & send
-        // size of sockaddr_in
-		addrlen = sizeof(recvAddress);
+	    if (retval == -1)
+	    	perror("select()");
+	    else if (retval) {
+	    	printf("Data is available now.\n");
 
-		// should wait for any receive message and send if hop > 0
+	        // receive & send
+	        // size of sockaddr_in
+			addrlen = sizeof(recvAddress);
 
-		// receive "recvLSP" from other nodes
-		recvlen = recvfrom( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&recvAddress, &addrlen) ;
-	
-		// bytes received
-		// printf("%d", recvlen);
+			// should wait for any receive message and send if hop > 0
 
-		// LSP counter in the packet received
-		receivedNeighborCounter = recvLSP.numberOfNeighbor;
+			// receive "recvLSP" from other nodes
+			recvlen = recvfrom( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&recvAddress, &addrlen) ;
+		
+			// bytes received
+			// printf("%d", recvlen);
 
-		// printing what received
-		for ( j = 0; j < receivedNeighborCounter; j++ ) {
-			printf("[%d] %s %d %d %s %s %d %d\n", recvLSP.numberOfNeighbor, recvLSP.singleLSP[j].source, recvLSP.singleLSP[j].hop, recvLSP.singleLSP[j].seqNum, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].nodeIP, recvLSP.singleLSP[j].nodePort, recvLSP.singleLSP[j].cost);
+			// LSP counter in the packet received
+			receivedNeighborCounter = recvLSP.numberOfNeighbor;
 
-			// reform matrix
-			adjMatrixChange( adjMat, recvLSP.singleLSP[j].source, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].cost );
-		}
+			// printing what received
+			for ( j = 0; j < receivedNeighborCounter; j++ ) {
+				printf("[%d] %s %d %d %s %s %d %d\n", recvLSP.numberOfNeighbor, recvLSP.source, recvLSP.singleLSP[j].hop, recvLSP.singleLSP[j].seqNum, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].nodeIP, recvLSP.singleLSP[j].nodePort, recvLSP.singleLSP[j].cost);
 
-		printArray(receivedNeighborCounter, adjMat);
-		// matrix reform
+				// reform matrix
+				adjMatrixChange( adjMat, recvLSP.source, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].cost );
+			}
+
+			// printing adjacency matrix so far
+			printArray(rowCol, adjMat);
 
 
-		// check the hop count & send
+			// check the hop count & send
 
+			// check the hop count & change the hop count(s) if necessary
+			// in packet there can be more than one LSP. LSP contains the hop count
+			// not the allLSP - should I add a hop in the allLSP ????????
+			if ( recvLSP.hopCount > 0 ) { 
 
-    } else {
-    	printf("No data within five seconds.\n");
-    	// break in here
-    }
+				printf("Hop Count: %d\n", recvLSP.hopCount);
 
-  // exit(1);
+				// reducing the hop count for a packet
+				recvLSP.hopCount--;
 
+				// send the packet to other neighbors
+				for ( i = 0; i < neighborCounter; i++ ) {
+
+					// check if the same source from where I got the packet
+					if ( !strcmp (inet_ntoa(recvAddress.sin_addr), inet_ntoa(neighbors[i].sin_addr) ) && (ntohs(neighbors[i].sin_port) == ntohs(recvAddress.sin_port)) ) {
+						// dont't send - because that's where you got the packet
+					} else {
+						// send the packet to other neighbors
+
+						// size of sockaddr_in
+						addrlen = sizeof(recvAddress);
+
+						// send tha packet
+						sendRet = sendto( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&neighbors[i],addrlen);
+
+						// error checking
+						if ( sendRet < 0 ) {
+							perror("something went wrong while sending:");
+							exit(1);
+						}
+					}
+				}
+
+			} // end if
+
+	    } else {
+	    	printf("No data within five seconds.\n");
+	    	// break the while loop
+	    	break;
+	    }
+
+	} // end of while(1)
 	/***** LOOP END *****/ // for receive & send
 
 	/********* start after receive *********
@@ -323,6 +364,9 @@ printf("matrix check\n");
 		4. wait for any other packets - wait for a certain time
 
 	********** end after receive *********/
+
+	// Final adjacency matrix
+	printArray(rowCol, adjMat);
 
 	fclose(fp);
 	return 0;
@@ -343,25 +387,29 @@ printf("matrix check\n");
  * @param   cost - cost of a path
  *
  */
-void adjMatrixChange( int adjMat[NUM_NEIGHBOR][NUM_NEIGHBOR], char *sourceRouter, char *labelRouter, int cost ) {
+void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int cost ) {
 
 	// value of source & destination routerLabel
 	int source, dest;
 	
 	// integer value of source routerLabel
 	source = sourceRouter[0] % 65;
+	// printf("%d ", source);
 	
 	// integer value of dest routerLabel
 	dest = labelRouter[0] % 65;
+	// printf("%d\n", dest);
 	
 	// changing the matrix value
 	adjMat[source][dest] = cost;
+	// printf("%d ", adjMat[source][dest]);
 	adjMat[dest][source] = cost;
+	// printf("%d\n", adjMat[dest][source]);
 
 }
 
 
-void printArray(int n, int array[][n]) {
+void printArray(int n, int **array) {
 	int i, j;
 	
 	for ( i = 0; i < n; i++ ) {
