@@ -19,6 +19,8 @@
 // Structure to LSP
 typedef struct LSP
 {	
+    // source router's label
+    char source[BUFF];
 	// hop counter
     int hop;
     // sequence number
@@ -36,10 +38,31 @@ typedef struct LSP
 // Structure to LSP packets
 typedef struct allLSP
 {	
-    
+    int numberOfNeighbor;
     // array of LSP
     LSP singleLSP[NUM_NEIGHBOR];
 
 }allLSP;
 
+
+/**
+ * changing the matrix value with respect to routerLabel
+ * routerLabel must be one character, starting from A - must be capital
+ * Formula used: routerLabel % 65
+ *
+ * @param   adjMat - adjacency matrix
+ * @param   sourceRouter - label of source the router
+ * @param   labelRouter - label of dest the router
+ * @param   cost - cost of a path
+ *
+ */
+void adjMatrixChange( int adjMat[NUM_NEIGHBOR][NUM_NEIGHBOR], char *sourceRouter, char *labelRouter, int cost );
+
+void printArray(int n, int array[][NUM_NEIGHBOR]);
+
 #endif
+
+
+
+
+
