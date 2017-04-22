@@ -16,6 +16,8 @@
 #define BUFSIZE 512
 #define NUM_NEIGHBOR 10
 
+#define inf 5000
+
 // Structure to LSP
 typedef struct LSP
 {	
@@ -48,6 +50,19 @@ typedef struct allLSP
 }allLSP;
 
 
+#define inf 5000
+
+// int min(int x,int y)
+// {
+//     return (x>y?y:x);
+// }
+struct node
+{
+    int cost;
+    int prev;
+};
+
+
 /**
  * changing the matrix value with respect to routerLabel
  * routerLabel must be one character, starting from A - must be capital
@@ -61,7 +76,16 @@ typedef struct allLSP
  */
 void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int cost );
 
+/**
+ * Printing the current adjacency matrix
+ *
+ * @param   n - number of row & column in the adjacency matrix
+ * @param   array - the adjacency matrix
+ *
+ */
 void printArray(int n, int **array);
+
+void djikstra(int **adjMat, char *rootNode);
 
 #endif
 

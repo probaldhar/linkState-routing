@@ -42,7 +42,7 @@ int main(int argc,  char *argv[] ) {
 	// store the hostname
 	char hostname[128];
 	// For storing the argument
-    char *portNum, *rounterLabel, *totalNumRouters, *discoverFile, sendbuf[BUFSIZE], readbuf[BUFSIZE], FileNameWithPath[BUFSIZE];
+    char *portNum, *rounterLabel, *totalNumRouters, *discoverFile, FileNameWithPath[BUFSIZE];
 
 	// Link state packets for each record in the file
 	allLSP allLSP, recvLSP;
@@ -90,10 +90,8 @@ int main(int argc,  char *argv[] ) {
 			if ( i == k ) {
 				adjMat[i][k] = 0;
 			} else {
-				adjMat[i][k] = -1;
+				adjMat[i][k] = inf;
 			}
-
-			// printf("%d %d\n", i, k);
 		}
 	}
 
@@ -116,6 +114,7 @@ printf("matrix check\n");
 		return -1;
 	}
 
+	// DO NOT DELETE THESE
 	// // Get information about client:
 	// if ( gethostname(hostname, sizeof(hostname) ) ){
 	// 	printf("Error\n");
@@ -123,7 +122,7 @@ printf("matrix check\n");
 
 	// get network host entry
     // hostptr = gethostbyname(hostname);
-    hostptr = gethostbyname("127.0.0.1");
+    hostptr = gethostbyname("127.0.0.1"); // THIS SHOULD BE REPLACED BY THE PREVIOUS LINE
 
 	// setting memory to recvAddress 
 	memset( &recvAddress, 0, sizeof(recvAddress) );
@@ -136,6 +135,7 @@ printf("matrix check\n");
 
 	memcpy((void *)&ownAddress.sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
 
+	// DO NOT DELETE IT
 	// printing the hostname, IP & port
 	// printf("name: %s\n", hostptr->h_name);
     printf("addr: [%s]\n", inet_ntoa(ownAddress.sin_addr));
@@ -188,27 +188,21 @@ printf("matrix check\n");
 		{
 			// routerLabel
 			if ( i % 4 == 0 ) { // rounterLabel
-				//printf ("0. %s ",token);
 				strcpy(allLSP.singleLSP[neighborCounter].label, token);
 			} else if ( i % 4 == 1 ) { // IP_address/hostname
-				//printf ("1. %s ",token);
 				strcpy(allLSP.singleLSP[neighborCounter].nodeIP, token);
 			} else if ( i % 4 == 2 ) { // portNumber
-				//printf ("2. %s ",token);
 				allLSP.singleLSP[neighborCounter].nodePort = atoi(token);
 			} else {
-				//printf ("3. %s ",token); // cost
 				allLSP.singleLSP[neighborCounter].cost = atoi(token);
 			}
 
-			// printf ("%s ",token);
 			token = strtok (NULL, s);
 			i++; // loop counter
 		}
 
 		neighborCounter++; // adding the neighbor counter
 
-		// printf("\n");
 	}
 
 
@@ -240,6 +234,7 @@ printf("matrix check\n");
 		neighbors[j].sin_port = htons(allLSP.singleLSP[j].nodePort);//PORT NO
 		neighbors[j].sin_addr.s_addr = inet_addr(allLSP.singleLSP[j].nodeIP);//ADDRESS
 
+		// DO NOT DELETE IT
 		// memcpy((void *)&neighbors.sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
 
 		// size of sockaddr_in
@@ -368,6 +363,10 @@ printf("matrix check\n");
 	// Final adjacency matrix
 	printArray(rowCol, adjMat);
 
+	// int routerName = rounterLabel[0] % 65;
+
+	djikstra(adjMat, rounterLabel);
+
 	fclose(fp);
 	return 0;
 }
@@ -376,48 +375,7 @@ printf("matrix check\n");
 
 
 
-/**
- * changing the matrix value with respect to routerLabel
- * routerLabel must be one character, starting from A - must be capital
- * Formula used: routerLabel % 65
- *
- * @param   adjMat - adjacency matrix
- * @param   sourceRouter - label of source the router
- * @param   labelRouter - label of dest the router
- * @param   cost - cost of a path
- *
- */
-void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int cost ) {
 
-	// value of source & destination routerLabel
-	int source, dest;
-	
-	// integer value of source routerLabel
-	source = sourceRouter[0] % 65;
-	// printf("%d ", source);
-	
-	// integer value of dest routerLabel
-	dest = labelRouter[0] % 65;
-	// printf("%d\n", dest);
-	
-	// changing the matrix value
-	adjMat[source][dest] = cost;
-	// printf("%d ", adjMat[source][dest]);
-	adjMat[dest][source] = cost;
-	// printf("%d\n", adjMat[dest][source]);
-
-}
-
-
-void printArray(int n, int **array) {
-	int i, j;
-	
-	for ( i = 0; i < n; i++ ) {
-		for ( j = 0; j < n; j++ ) 
-			printf("%d ", array[i][j]);
-		printf("\n");		
-	}
-}
 
 
 
