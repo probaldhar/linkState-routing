@@ -363,10 +363,23 @@ printf("matrix check\n");
 	// Final adjacency matrix
 	printArray(rowCol, adjMat);
 
-	// int routerName = rounterLabel[0] % 65;
-
+	// calculating shortest path & printing forwarding table for router
 	djikstra(adjMat, rounterLabel);
 
+	// check if dynamic given
+	if ( dynamic )
+		printf("Dynamic is in the argument.\n");
+
+	/********* start if dynamic *********
+		
+		To-do:
+		1. flooding with dynamic cost
+		2. calculate adjacency matrix
+		3. apply djikstra() on new adjacency matrix
+		4. print new forwarding table
+
+	********** end if dynamic *********/
+	
 	fclose(fp);
 	return 0;
 }
