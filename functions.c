@@ -53,7 +53,7 @@ void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int c
  * @param   array - the adjacency matrix
  *
  */
-void printArray(int n, int **array) {
+void printArray ( int n, int **array ) {
 	int i, j;
 	
 	for ( i = 0; i < n; i++ ) {
@@ -67,40 +67,64 @@ void printArray(int n, int **array) {
 	}
 }
 
-
-int min(int x,int y)
+/**
+ * calculating minimum between two values
+ *
+ * @param   x - first value
+ * @param   y - second value
+ *
+ * @return	y if x>y and x otherwise
+ *
+ */
+int min ( int x, int y )
 {
-	return (x>y?y:x);
+	return ( x>y ? y:x );
 }
 
 
+/**
+ * calculating shortest path for a router to go to others router 
+ * and priting the forwaring table using djikstra's algorithm.
+ *
+ * @param   adjMat 			- adjacency matrix
+ * @param   rounterLabel 	- source router label
+ * @param	totalNumRouters	- total number of router
+ *
+ */
+void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters ) {
 
-void djikstra(int **adjMat, char *rootNode) {
-
-	struct node costMat[7][6];
-	int visited[6]={0};
-	int vIndex; // vIndex - argument
-	vIndex = rootNode[0] % 65;
+	// cost matrix
+	struct node costMat[totalNumRouters+1][totalNumRouters];
+	// visited nodes
+	int visited[totalNumRouters];
+	// Router rootNode
+	int vIndex; 
+	vIndex = rounterLabel[0] % 65;
 	int minIndex,minVal;
 	
 	int i,j;
 	int markedVal;
+
+	// initializing visited matrix to 0
+	for ( i = 0; i < totalNumRouters; i++ )
+		visited[i] = 0;
 	
 	
 	// fill the first row of the cost matrix as infinity
-	for(i=0;i<6;i++)
+	for ( i = 0; i < totalNumRouters; i++ )
 		if(i==vIndex)
 			costMat[0][i].cost=0; 
 		else 
 			costMat[0][i].cost=inf;
 			
-	markedVal=0;		
-	for(i=1;i<7;i++)
+	markedVal=0;
+
+	for ( i = 1; i < totalNumRouters + 1; i++ )
 	{
 		visited[vIndex]=1; // mark the first node as visited
 		minVal=inf;
 		/**scan through the matrix for neighbouring nodes */
-		for(j=0;j<6;j++)
+		for( j=0; j < totalNumRouters; j++ )
 		{
 			if(visited[j]==1)
 			{	
@@ -139,12 +163,12 @@ void djikstra(int **adjMat, char *rootNode) {
 	//	printf("MArked value %d\n",markedVal);
 	}
 	
-	costMat[6][rootNode[0] % 65].prev = -1;
+	costMat[totalNumRouters][rounterLabel[0] % 65].prev = -1;
 	// printing the cost Matrix
 	
-	for ( i = 1; i < 7; i++ )
+	for ( i = 1; i < totalNumRouters+1; i++ )
 	{
-		for(j=0;j<6;j++)
+		for(j=0;j<totalNumRouters;j++)
 		{
 			if (costMat[i][j].cost!=5000 && j != vIndex ) 
 				printf("%d %c  ",costMat[i][j].cost,costMat[i][j].prev+65);
@@ -158,13 +182,13 @@ void djikstra(int **adjMat, char *rootNode) {
 		
 	/** the path to be searched for a specific router */
 	
-	printf("\nForwarding table for: %s\n\n", rootNode);
+	printf("\nForwarding table for: %s\n\n", rounterLabel);
 
 	int search;
 
-	for ( search = 0; search < 6; search ++ ) {
+	for ( search = 0; search < totalNumRouters; search ++ ) {
 
-		i=6;
+		i=totalNumRouters;
 		j=search;
 
 		// printf("search: %d\n", search);

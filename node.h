@@ -52,16 +52,23 @@ typedef struct allLSP
 
 #define inf 5000
 
-// int min(int x,int y)
-// {
-//     return (x>y?y:x);
-// }
 struct node
 {
     int cost;
     int prev;
 };
 
+
+/**
+ * calculating minimum between two values
+ *
+ * @param   x - first value
+ * @param   y - second value
+ *
+ * @return  y if x>y and x otherwise
+ *
+ */
+int min( int x, int y );
 
 /**
  * changing the matrix value with respect to routerLabel
@@ -85,7 +92,15 @@ void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int c
  */
 void printArray(int n, int **array);
 
-void djikstra(int **adjMat, char *rootNode);
+/**
+ * calculating shortest path for a router to go to others router 
+ * and priting the forwaring table using djikstra's algorithm.
+ *
+ * @param   adjMat - adjacency matrix
+ * @param   rounterLabel - source router label
+ *
+ */
+void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters);
 
 #endif
 

@@ -100,7 +100,7 @@ printf("matrix check\n");
 
 	// combining the filename with path
 	if ( snprintf(FileNameWithPath, sizeof(FileNameWithPath), "%s%s", "nodes-pc/", discoverFile) < 0 ) {
-		printf("somwthing went wrong with snprintf:");
+		printf("something went wrong with snprintf:");
 		exit(1);
 	}	
 
@@ -278,7 +278,8 @@ printf("matrix check\n");
 	    else if (retval) {
 	    	printf("Data is available now.\n");
 
-	        // receive & send
+	        /*******  receive & send  ******/
+
 	        // size of sockaddr_in
 			addrlen = sizeof(recvAddress);
 
@@ -286,7 +287,11 @@ printf("matrix check\n");
 
 			// receive "recvLSP" from other nodes
 			recvlen = recvfrom( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&recvAddress, &addrlen) ;
-		
+			
+			if ( recvlen < 0 ) {
+				perror("something went wrong while receiving:");
+				exit(1);
+			}
 			// bytes received
 			// printf("%d", recvlen);
 
@@ -308,8 +313,6 @@ printf("matrix check\n");
 			// check the hop count & send
 
 			// check the hop count & change the hop count(s) if necessary
-			// in packet there can be more than one LSP. LSP contains the hop count
-			// not the allLSP - should I add a hop in the allLSP ????????
 			if ( recvLSP.hopCount > 0 ) { 
 
 				printf("Hop Count: %d\n", recvLSP.hopCount);
@@ -364,7 +367,7 @@ printf("matrix check\n");
 	printArray(rowCol, adjMat);
 
 	// calculating shortest path & printing forwarding table for router
-	djikstra(adjMat, rounterLabel);
+	djikstra(adjMat, rounterLabel, atoi(totalNumRouters));
 
 	// check if dynamic given
 	if ( dynamic )
