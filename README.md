@@ -10,8 +10,14 @@ Here, *routerLabel* is a one word label describing the router itself, *portNum* 
 
 ### The File Format -
 
-The neighbor discovery file must be formatted such that each neighbor of a router is described by a one word label, an IP address (or hostname), a port number, and a cost value as comma separate values on a single line. All neighbors of a router are listed line-by-line. The following describes the format where *<routerLabel>* is the label of the router, *<IP_address/hostname>* is the IP address or host name of the router, *<portNumber>* is the port number of the router, *<cost>* is the cost of the link.
+The neighbor discovery file must be formatted such that each neighbor of a router is described by a one word label, an IP address (or hostname), a port number, and a cost value as comma separate values on a single line. All neighbors of a router are listed line-by-line. The following describes the format where *\<routerLabel\>* is the label of the router, *\<IP_address/hostname\>* is the IP address or host name of the router, *\<portNumber\>* is the port number of the router, *\<cost\>* is the cost of the link.
 
-*<routerLabel>,<IP_address/hostname>,<portNumber>,<cost>* 
-*<routerLabel>,<IP_address/hostname>,<portNumber>,<cost>*
-*<routerLabel>,<IP_address/hostname>,<portNumber>,<cost>*
+*\<routerLabel\>,\<IP_address/hostname\>,\<portNumber\>,\<cost\>*  
+*\<routerLabel\>,\<IP_address/hostname\>,\<portNumber\>,\<cost\>*  
+*\<routerLabel\>,\<IP_address/hostname\>,\<portNumber\>,\<cost\>* 
+
+
+
+
+
+
