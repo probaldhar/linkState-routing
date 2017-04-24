@@ -1,4 +1,4 @@
-# linkState
+# Link State Routing & Forwarding Tables
 link state algorithm &amp; forwarding table
 
 ### Usage -
