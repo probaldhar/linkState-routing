@@ -102,6 +102,9 @@ void printArray(int n, int **array);
  */
 void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters);
 
+
+void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter );
+
 #endif
 
 

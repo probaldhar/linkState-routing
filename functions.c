@@ -9,9 +9,23 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "node.h"
+#include	<stdio.h>
+#include	<stdlib.h>
+#include 	<time.h>
+#include	<string.h>
+#include	<sys/socket.h>
+#include	<netinet/in.h>
+#include	<arpa/inet.h>
+#include	<sys/wait.h>
+#include 	<netdb.h>
+/* According to POSIX.1-2001, POSIX.1-2008 */
+#include <sys/select.h>
+/* According to earlier standards */
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include	"node.h"
 
 
 /**
@@ -212,7 +226,122 @@ void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters ) {
 
 
 
+void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter ) {
 
+	// select params
+	fd_set readfds;
+	struct timeval tv;
+	int i, j, numfd, retval, recvlen, sendRet, receivedNeighborCounter;
+	// length of sockaddr_in
+	socklen_t addrlen;
+	// Link state packets for each record in the file
+	allLSP recvLSP;
+	// sockaddr_in to send the message
+	struct sockaddr_in recvAddress;
+
+	/***** LOOP START *****/ // for receive & send
+
+	while (1) {
+
+		// select system call
+		// add our descriptors to the set
+		FD_ZERO(&readfds);
+	    FD_SET(nodeSd, &readfds);
+
+	    // the highest-numbered file descriptor
+	    numfd = nodeSd + 1;
+
+	    /* Wait up to five seconds. */
+	    tv.tv_sec = 5;
+	    tv.tv_usec = 0;
+
+	    // checking return value of select
+	    retval = select(numfd, &readfds, NULL, NULL, &tv);
+	    /* Don't rely on the value of tv now! */
+
+	    if (retval == -1)
+	    	perror("select()");
+	    else if (retval) {
+	    	printf("Data is available now.\n");
+
+	        /*******  receive & send  ******/
+
+	        // size of sockaddr_in
+			addrlen = sizeof(recvAddress);
+
+			// should wait for any receive message and send if hop > 0
+
+			// receive "recvLSP" from other nodes
+			recvlen = recvfrom( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&recvAddress, &addrlen) ;
+			
+			// error check
+			if ( recvlen < 0 ) {
+				perror("something went wrong while receiving:");
+				exit(1);
+			}
+			// bytes received
+			// printf("%d", recvlen);
+
+			// LSP counter in the packet received
+			receivedNeighborCounter = recvLSP.numberOfNeighbor;
+
+			// printing what received
+			for ( j = 0; j < receivedNeighborCounter; j++ ) {
+				printf("[%d] %s %d %d %s %s %d %d\n", recvLSP.numberOfNeighbor, recvLSP.source, recvLSP.singleLSP[j].hop, recvLSP.singleLSP[j].seqNum, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].nodeIP, recvLSP.singleLSP[j].nodePort, recvLSP.singleLSP[j].cost);
+
+				// reform matrix
+				adjMatrixChange( adjMat, recvLSP.source, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].cost );
+			}
+
+			// printing adjacency matrix so far
+			printArray(rowCol, adjMat);
+
+
+			// check the hop count & send
+
+			// check the hop count & change the hop count(s) if necessary
+			if ( recvLSP.hopCount > 0 ) { 
+
+				printf("Hop Count: %d\n", recvLSP.hopCount);
+
+				// reducing the hop count for a packet
+				recvLSP.hopCount--;
+
+				// send the packet to other neighbors
+				for ( i = 0; i < neighborCounter; i++ ) {
+
+					// check if the same source from where I got the packet
+					if ( !strcmp (inet_ntoa(recvAddress.sin_addr), inet_ntoa(neighbors[i].sin_addr) ) && (ntohs(neighbors[i].sin_port) == ntohs(recvAddress.sin_port)) ) {
+						// dont't send - because that's where you got the packet
+					} else {
+						// send the packet to other neighbors
+
+						// size of sockaddr_in
+						addrlen = sizeof(recvAddress);
+
+						// send tha packet
+						sendRet = sendto( nodeSd, &recvLSP, sizeof(recvLSP), 0, (struct sockaddr*)&neighbors[i],addrlen);
+
+						// error checking
+						if ( sendRet < 0 ) {
+							perror("something went wrong while sending:");
+							exit(1);
+						}
+					}
+				}
+
+			} // end if
+
+	    } else {
+	    	printf("No data within five seconds.\n");
+	    	// break the while loop
+	    	break;
+	    }
+
+	} // end of while(1)
+	/***** LOOP END *****/ // for receive & send
+
+}
 
 
 
