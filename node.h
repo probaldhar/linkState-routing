@@ -102,7 +102,16 @@ void printArray(int n, int **array);
  */
 void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters);
 
-
+/**
+ * flooding packets, receiving with system call select() to wait for a certain time
+ *
+ * @param   nodeSd          - socket descriptor
+ * @param   neighbors[]     - array of nrighbor router connection
+ * @param   rowCol          - number of router
+ * @param   adjMat          - adjacency matrix
+ * @param   neighborCounter - number of neighbor of a router
+ *
+ */
 void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter );
 
 #endif

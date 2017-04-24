@@ -275,7 +275,7 @@ printf("matrix check\n");
 	// calculating shortest path & printing forwarding table for router
 	djikstra(adjMat, rounterLabel, atoi(totalNumRouters));
 
-	// check if dynamic given
+	// check if dynamic given in the argument
 	if ( dynamic ) {
 		printf("Dynamic is in the argument.\n");
 
