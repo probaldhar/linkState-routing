@@ -21,7 +21,7 @@ For example, a router A may have the following links indicating that the router 
 *B,cs-ssh1.github.io,60005,8*  
 *C,cs-ssh2.github.io,60008,2*
 
-For simplicity, *routerLabel* should be contain only one character and capital letter (A-Z)
+For simplicity, *routerLabel* should be contain only one character and capital letter (A-Z).
 
 
 
