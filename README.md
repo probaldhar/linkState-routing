@@ -16,7 +16,12 @@ The neighbor discovery file must be formatted such that each neighbor of a route
 *\<routerLabel\>,\<IP_address/hostname\>,\<portNumber\>,\<cost\>*  
 *\<routerLabel\>,\<IP_address/hostname\>,\<portNumber\>,\<cost\>* 
 
+For example, a router A may have the following links indicating that the router has the neighbors B and C with respective costs of 8 and 2:
 
+*B,cs-ssh1.github.io,60005,8*  
+*C,cs-ssh2.github.io,60008,2*
+
+For simplicity, *routerLabel* should be contain only one character and capital letter (A-Z)
 
 
 
