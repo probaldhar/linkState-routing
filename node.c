@@ -48,7 +48,6 @@ int main(int argc,  char *argv[] ) {
 
 	// Link state packets for each record in the file
 	allLSP allLSP, dynamicLSP;
-	// allLSP allLSP, recvLSP, dynamicLSP;
 
 	// select params
 	// fd_set readfds;
@@ -56,7 +55,7 @@ int main(int argc,  char *argv[] ) {
 
 	// Usage
 	if ( argc < 5 ){
-		printf("Usage: node <routerLabel> <portNum> <totalNumRouters> <discoverFile> [-dynamic]\n");
+		printf("Usage: ./node <routerLabel> <portNum> <totalNumRouters> <discoverFile> [-dynamic]\n");
 		exit(1);
 	}
 
@@ -119,13 +118,13 @@ printf("matrix check\n");
 
 	// DO NOT DELETE THESE
 	// // Get information about client:
-	// if ( gethostname(hostname, sizeof(hostname) ) ){
-	// 	printf("Error\n");
-	// }
+	if ( gethostname(hostname, sizeof(hostname) ) ){
+		printf("Error\n");
+	}
 
 	// get network host entry
-    // hostptr = gethostbyname(hostname);
-    hostptr = gethostbyname("127.0.0.1"); // THIS SHOULD BE REPLACED BY THE PREVIOUS LINE
+    hostptr = gethostbyname(hostname);
+    // hostptr = gethostbyname("127.0.0.1"); // THIS SHOULD BE REPLACED BY THE PREVIOUS LINE
 
 	// setting memory to recvAddress 
 	memset( &recvAddress, 0, sizeof(recvAddress) );
@@ -140,7 +139,7 @@ printf("matrix check\n");
 
 	// DO NOT DELETE IT
 	// printing the hostname, IP & port
-	// printf("name: %s\n", hostptr->h_name);
+	printf("name: %s\n", hostptr->h_name);
     printf("addr: [%s]\n", inet_ntoa(ownAddress.sin_addr));
     printf("port: %d\n",ntohs(ownAddress.sin_port));
 	
@@ -193,6 +192,7 @@ printf("matrix check\n");
 			if ( i % 4 == 0 ) { // rounterLabel
 				strcpy(allLSP.singleLSP[neighborCounter].label, token);
 			} else if ( i % 4 == 1 ) { // IP_address/hostname
+
 				strcpy(allLSP.singleLSP[neighborCounter].nodeIP, token);
 			} else if ( i % 4 == 2 ) { // portNumber
 				allLSP.singleLSP[neighborCounter].nodePort = atoi(token);
@@ -211,7 +211,7 @@ printf("matrix check\n");
 
 	// initial sleep
 	printf("initial 5 seconds delay so that every router can up & running.\n");
-	sleep(5);
+	sleep(TIMEOUT);
 
 	// assign the number of neighbor in the LSP packet
 	allLSP.numberOfNeighbor = neighborCounter;
@@ -232,6 +232,14 @@ printf("matrix check\n");
 		// printing the values of LSPs
 		printf("%s %d %d %s %s %d %d\n", allLSP.source, allLSP.singleLSP[j].hop, allLSP.singleLSP[j].seqNum, allLSP.singleLSP[j].label, allLSP.singleLSP[j].nodeIP, allLSP.singleLSP[j].nodePort, allLSP.singleLSP[j].cost);
 
+		// what if the file don't have IP, have to find out IP from hostname
+		hostptr = gethostbyname(allLSP.singleLSP[j].nodeIP);
+
+	    if ( hostptr == NULL ){
+	    	perror("NULL when calculating gethostbyname from file hostname:");
+	    	return 0;
+	    }
+
 		// sockaddr_in create for each record in the file
 		memset( &neighbors[j], 0, sizeof(neighbors[j]) );
 		neighbors[j].sin_family = AF_INET;
@@ -239,21 +247,26 @@ printf("matrix check\n");
 		neighbors[j].sin_addr.s_addr = inet_addr(allLSP.singleLSP[j].nodeIP);//ADDRESS
 
 		// DO NOT DELETE IT
-		// memcpy((void *)&neighbors.sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
+		memcpy((void *)&neighbors[j].sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
+
+		printf("name: %s\n", hostptr->h_name);
+    	printf("addr: [%s]\n", inet_ntoa(neighbors[j].sin_addr));
+    	printf("port: %d\n",ntohs(neighbors[j].sin_port));
 
 		// size of sockaddr_in
 		addrlen = sizeof(neighbors[i]);
 
 		// send "allLSP" to every record of the neighbors
-		sendRet = sendto( nodeSd, &allLSP, sizeof(allLSP), 0, (struct sockaddr*)&neighbors[j],addrlen);
+		// sendRet = sendto( nodeSd, &allLSP, sizeof(allLSP), 0, (struct sockaddr*)&neighbors[j],addrlen);
 
-		if ( sendRet < 0 ) {
-			perror("something went wrong while sending:");
-			exit(1);
-		}
+		// if ( sendRet < 0 ) {
+		// 	perror("something went wrong while sending:");
+		// 	exit(1);
+		// }
 
 	}
 
+exit(1);
 	// printing adjacency matrix so far
 	printArray(rowCol, adjMat);
 

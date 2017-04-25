@@ -18,6 +18,15 @@
 
 #define inf 5000
 
+#define TIMEOUT 5
+
+// structure to store the previous router's cost
+struct node
+{
+    int cost;
+    int prev;
+};
+
 // Structure to LSP
 typedef struct LSP
 {	
@@ -48,15 +57,6 @@ typedef struct allLSP
     LSP singleLSP[NUM_NEIGHBOR];
 
 }allLSP;
-
-
-#define inf 5000
-
-struct node
-{
-    int cost;
-    int prev;
-};
 
 
 /**

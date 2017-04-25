@@ -1,4 +1,4 @@
-all: node 
+all: node host
 # all: node dij
 
 node: functions.o node.o
@@ -16,6 +16,12 @@ node.o: node.h node.c
 functions.o: node.h functions.c
 	gcc -g -c functions.c -Wall
 
+host: host.o
+	gcc -o host hostname.c
+
+host.o: hostname.c
+	gcc -g -c hostname.c -Wall
+
 clean:
-	rm *.o node
+	rm *.o node host
 	# rm *.o node dij

@@ -46,17 +46,13 @@ void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int c
 	
 	// integer value of source routerLabel
 	source = sourceRouter[0] % 65;
-	// printf("%d ", source);
-	
+		
 	// integer value of dest routerLabel
 	dest = labelRouter[0] % 65;
-	// printf("%d\n", dest);
 	
 	// changing the matrix value
 	adjMat[source][dest] = cost;
-	// printf("%d ", adjMat[source][dest]);
 	adjMat[dest][source] = cost;
-	// printf("%d\n", adjMat[dest][source]);
 
 }
 
@@ -261,7 +257,7 @@ void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHB
 	    numfd = nodeSd + 1;
 
 	    /* Wait up to five seconds. */
-	    tv.tv_sec = 5;
+	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 
 	    // checking return value of select
