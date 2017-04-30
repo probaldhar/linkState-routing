@@ -1,7 +1,7 @@
 /**
  * functions for node.
  *
- * @author : Probal, Debarghya, Arup
+ * @author : Probal, Debarghya
  * @Filename : functions.c
  * @Date : 04/20/17
  * @course : COP5990
@@ -11,13 +11,13 @@
 
 #include	<stdio.h>
 #include	<stdlib.h>
-#include <time.h>
+#include 	<time.h>
 #include	<string.h>
 #include	<sys/socket.h>
 #include	<netinet/in.h>
 #include	<arpa/inet.h>
 #include	<sys/wait.h>
-#include <netdb.h>
+#include 	<netdb.h>
 /* According to POSIX.1-2001, POSIX.1-2008 */
 #include <sys/select.h>
 /* According to earlier standards */
@@ -138,10 +138,9 @@ int min ( int x, int y )
  * @param   adjMat 			- adjacency matrix
  * @param   rounterLabel 	- source router label
  * @param	totalNumRouters	- total number of router
- * @param   debug           - printing infomation to the screen
  *
  */
-void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters, int debug ) {
+void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters ) {
 
 	// cost matrix
 	struct node costMat[totalNumRouters+1][totalNumRouters];
@@ -162,77 +161,71 @@ void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters, int debug
 	
 	// fill the first row of the cost matrix as infinity
 	for ( i = 0; i < totalNumRouters; i++ )
-		if ( i == vIndex )
-			costMat[0][i].cost = 0; 
+		if(i==vIndex)
+			costMat[0][i].cost=0; 
 		else 
-			costMat[0][i].cost = inf;
+			costMat[0][i].cost=inf;
 			
-	markedVal = 0;
+	markedVal=0;
 
 	for ( i = 1; i < totalNumRouters + 1; i++ )
 	{
-		visited[vIndex] = 1; // mark the first node as visited
-		minVal = inf;
-		/**scan through the matrix for neighbouring nodes and update the cost and the previous visited node 
-         If the node is already visited just copy the previous row values
-         else
-         calculate the minimum cost for each iteration
-       */
-       
-		for( j = 0; j < totalNumRouters; j++ )
+		visited[vIndex]=1; // mark the first node as visited
+		minVal=inf;
+		/**scan through the matrix for neighbouring nodes */
+		for( j=0; j < totalNumRouters; j++ )
 		{
-			if ( visited[j] == 1 )
+			if(visited[j]==1)
 			{	
-				costMat[i][j].cost = costMat[i-1][j].cost;
-				costMat[i][j].prev = costMat[i-1][j].prev;
-				
+				costMat[i][j].cost=costMat[i-1][j].cost;
+				costMat[i][j].prev=costMat[i-1][j].prev;
+				//	if(costMat[i][j].prev){}
+				//	else costMat[i][j].prev=vIndex;
+				//markedVal=costMat[i][j];
+				//vIndex++;
+				//printf("The value is %d \n",costMat[i][j]);
 				continue;
-			// if the node is already visited, just move on to the next node
+				   // if the node is already visiteifd, just move on to the next node
 			} else {
-				if ( min( markedVal+adjMat[vIndex][j],costMat[i-1][j].cost) == costMat[i-1][j].cost)
+				if(min(markedVal+adjMat[vIndex][j],costMat[i-1][j].cost)==costMat[i-1][j].cost)
 				{
-					costMat[i][j].cost = costMat[i-1][j].cost;
-					costMat[i][j].prev = costMat[i-1][j].prev;
+					costMat[i][j].cost=costMat[i-1][j].cost;
+					costMat[i][j].prev=costMat[i-1][j].prev;
 				} else {
-						costMat[i][j].prev = vIndex;
-						costMat[i][j].cost = min(markedVal+adjMat[vIndex][j],costMat[i-1][j].cost);
+						costMat[i][j].prev=vIndex;
+						costMat[i][j].cost=	min(markedVal+adjMat[vIndex][j],costMat[i-1][j].cost);
 				}
 
-            /**This is used to select the next node to be visited*/
-				if ( costMat[i][j].cost < minVal )
+				if(costMat[i][j].cost<minVal)
 				{
-					minVal = costMat[i][j].cost;
-					minIndex = j;
+					minVal=costMat[i][j].cost;
+					minIndex=j;
 				}
 			}
 			
-			
-			
+			//vIndex=minIndex;
+			//markedVal=minVal;
+			//printf("marked val: %d\n",markedVal);
 		}
-
-		// the next node to be visited is updated
-      	vIndex = minIndex;
-		markedVal = minVal;
-
+		vIndex=minIndex;
+		markedVal=minVal;
+	//	printf("MArked value %d\n",markedVal);
 	}
 	
-	// there's no previous so that making that -1
 	costMat[totalNumRouters][rounterLabel[0] % 65].prev = -1;
+	// printing the cost Matrix
 	
-	if ( debug ) {
-	   	// printing the cost Matrix
-		for ( i = 1; i < totalNumRouters+1; i++ )
+	for ( i = 1; i < totalNumRouters+1; i++ )
+	{
+		for(j=0;j<totalNumRouters;j++)
 		{
-			for(j=0;j<totalNumRouters;j++)
-			{
-				if ( costMat[i][j].cost != 5000 && j != vIndex ) 
-					printf("%d %c  ",costMat[i][j].cost,costMat[i][j].prev+65);
-				else 
-					printf("inf");
-			}
-			
-			printf("\n");
+			if (costMat[i][j].cost!=5000 && j != vIndex ) 
+				printf("%d %c  ",costMat[i][j].cost,costMat[i][j].prev+65);
+			else 
+				printf("inf");
 		}
+		
+		printf("\n");
 	}
 		
 		
@@ -240,22 +233,23 @@ void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters, int debug
 	
 	printf("\nForwarding table for: %s\n\n", rounterLabel);
 
-	// loop varialbe
 	int search;
 
 	for ( search = 0; search < totalNumRouters; search ++ ) {
 
-		i = totalNumRouters;
-		j = search;
+		i=totalNumRouters;
+		j=search;
 
-		/** the loop is used to backtrack from the destination node to the source node using the previous node information */
-      	while ( costMat[i][j].prev != -1 && costMat[i][costMat[i][j].prev].cost!=0) {
+		// printf("search: %d\n", search);
+		// printf("check: i=%d j=%d %d\n", i, j, costMat[i][j].prev);
+
+	
+		while ( costMat[i][j].prev != -1 && costMat[i][costMat[i][j].prev].cost!=0)
+		{
 			j = costMat[i][j].prev;
 		}
-
-		// not printing present router's next hop
-		if ( (rounterLabel[0] % 65) != j ) 
-			printf("The router hop to %c is %c\n", 65+search, j+65);
+		
+		printf("The router hop to %c is %c\n", 65+search, j+65);
 
 	}
 		
@@ -273,7 +267,6 @@ void djikstra ( int **adjMat, char *rounterLabel, int totalNumRouters, int debug
  * @param   rowCol          - number of router
  * @param   adjMat          - adjacency matrix
  * @param   neighborCounter - number of neighbor of a router
- * @param   debug           - printing infomation to the screen
  *
  */
 void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter, int seqMat[][rowCol], int debug ) {
@@ -313,9 +306,7 @@ void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHB
 	    if (retval == -1)
 	    	perror("select()");
 	    else if (retval) {
-
-	    	if ( debug ) 
-	    		printf("Data is available now.\n");
+	    	printf("Data is available now.\n");
 
 	        /*******  receive & send  ******/
 
@@ -338,9 +329,7 @@ void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHB
 
 			// printing what received
 			for ( j = 0; j < receivedNeighborCounter; j++ ) {
-
-				if ( debug )
-					printf("[%d] %s %d %s %s %d %d\n", recvLSP.numberOfNeighbor, recvLSP.source, recvLSP.singleLSP[j].seqNum, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].nodeIP, recvLSP.singleLSP[j].nodePort, recvLSP.singleLSP[j].cost);
+				printf("[%d] %s %d %s %s %d %d\n", recvLSP.numberOfNeighbor, recvLSP.source, recvLSP.singleLSP[j].seqNum, recvLSP.singleLSP[j].label, recvLSP.singleLSP[j].nodeIP, recvLSP.singleLSP[j].nodePort, recvLSP.singleLSP[j].cost);
 
 				// calculating matrix position
 				source = recvLSP.source[0] % 65;
@@ -357,18 +346,15 @@ void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHB
 
 			}
 
-			if ( debug ) {
-				// printing adjacency matrix so far
-				printArray(rowCol, adjMat);
-			}
+			// printing adjacency matrix so far
+			printArray(rowCol, adjMat);
 
 			// check the hop count & send
 
 			// check the hop count & change the hop count(s) if necessary
 			if ( recvLSP.hopCount > 0) { 
 
-				if ( debug ) 
-					printf("Hop Count: %d\n", recvLSP.hopCount);
+				printf("Hop Count: %d\n", recvLSP.hopCount);
 
 				// reducing the hop count for a packet
 				recvLSP.hopCount--;
@@ -399,7 +385,7 @@ void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHB
 			} // end if
 
 	    } else {
-	    	printf("No more packet received within %d seconds.\n", TIMEOUT);
+	    	printf("No packet received within %d seconds.\n", TIMEOUT);
 	    	// break the while loop
 	    	break;
 	    }

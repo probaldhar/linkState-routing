@@ -1,7 +1,7 @@
 /**
  * Defines all functions/structures for node.
  *
- * @author : Probal chandra dhar
+ * @author : Probal, Debarghya, Arup
  * @Filename : node.h
  * @Date : 04/17/17
  * @course : COP5990
@@ -30,8 +30,6 @@ struct node
 // Structure to LSP
 typedef struct LSP
 {	
-	// hop counter
-    int hop;
     // sequence number
     int seqNum;
     // router's label
@@ -84,7 +82,20 @@ int min( int x, int y );
 void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int cost );
 
 /**
- * Printing the current adjacency matrix
+ * changing the matrix value with respect to routerLabel
+ * routerLabel must be one character, starting from A - must be capital
+ * Formula used: routerLabel % 65
+ *
+ * @param   adjMat - adjacency matrix
+ * @param   sourceRouter - label of source the router
+ * @param   labelRouter - label of dest the router
+ * @param   cost - cost of a path
+ *
+ */
+void seqMatrixChange( int n, int seqMat[][n], char *sourceRouter, char *labelRouter, int seqNum );
+
+/**
+ * Printing the current adjacency matrix using pointer
  *
  * @param   n - number of row & column in the adjacency matrix
  * @param   array - the adjacency matrix
@@ -93,14 +104,24 @@ void adjMatrixChange( int **adjMat, char *sourceRouter, char *labelRouter, int c
 void printArray(int n, int **array);
 
 /**
+ * Printing the current sequence matrix using array
+ *
+ * @param   n - number of row & column in the sequence matrix
+ * @param   array - the sequence matrix
+ *
+ */
+void printArrayArray ( int n, int array[][n] );
+
+/**
  * calculating shortest path for a router to go to others router 
  * and priting the forwaring table using djikstra's algorithm.
  *
- * @param   adjMat - adjacency matrix
- * @param   rounterLabel - source router label
+ * @param   adjMat          - adjacency matrix
+ * @param   rounterLabel    - source router label
+ * @param   debug           - printing infomation to the screen
  *
  */
-void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters);
+void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters, int debug);
 
 /**
  * flooding packets, receiving with system call select() to wait for a certain time
@@ -110,9 +131,10 @@ void djikstra(int **adjMat, char *rounterLabel, int totalNumRouters);
  * @param   rowCol          - number of router
  * @param   adjMat          - adjacency matrix
  * @param   neighborCounter - number of neighbor of a router
+ * @param   debug           - printing infomation to the screen
  *
  */
-void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter );
+void floodReceiveWithSelect( int nodeSd, struct sockaddr_in neighbors[NUM_NEIGHBOR], int rowCol, int **adjMat, int neighborCounter, int seqMat[][rowCol], int bebug );
 
 #endif
 

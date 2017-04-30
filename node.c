@@ -1,7 +1,7 @@
 /**
  * Implements all operation for client.
  *
- * @author : Probal chandra dhar
+ * @author : Probal, Debarghya, Arup
  * @Filename : server.c
  * @Date : 04/17/17
  * @course : COP5990
@@ -33,8 +33,7 @@ int **adjMat;
 int main(int argc,  char *argv[] ) {
 
 	// For return values for socket creation, send & receive message
-	// int nodeSd, sendRet, recvlen, dynamic = 0, i, k, retval, numfd, receivedNeighborCounter;
-	int nodeSd, sendRet, dynamic = 0, i, k;
+	int nodeSd, sendRet, dynamic = 0, i, k, debug = 0;
 	// sockaddr_in to send the message
 	struct sockaddr_in ownAddress, serveraddress, recvAddress, neighbors[NUM_NEIGHBOR]; // neighbors to make the connections
 	// length of sockaddr_in
@@ -49,13 +48,9 @@ int main(int argc,  char *argv[] ) {
 	// Link state packets for each record in the file
 	allLSP allLSP, dynamicLSP;
 
-	// select params
-	// fd_set readfds;
-	// struct timeval tv;
-
 	// Usage
 	if ( argc < 5 ){
-		printf("Usage: ./node <routerLabel> <portNum> <totalNumRouters> <discoverFile> [-dynamic]\n");
+		printf("Usage: ./node <routerLabel> <portNum> <totalNumRouters> <discoverFile> [-dynamic] [-Debug]\n");
 		exit(1);
 	}
 
@@ -66,9 +61,16 @@ int main(int argc,  char *argv[] ) {
 	discoverFile = (char * )malloc(sizeof(char)*BUFSIZE);
 
 	// check if dynamic
-	if ( argc == 6 && !strcmp(argv[5], "-dynamic") ) {
+	if ( argc == 6 && !strcmp(argv[5], "-dynamic") )
 		dynamic = 1; // setting the flag to 1
-	} 
+	else if ( argc == 7 && !strcmp(argv[5], "-dynamic") )
+		dynamic = 1; 
+
+	// check if debug
+	if ( argc == 6 && !strcmp(argv[5], "-Debug") )
+		debug = 1; // setting the flag to 1
+	else if ( argc == 7 && !strcmp(argv[6], "-Debug") )
+		debug = 1; // setting the flag to 1
 
 	/****** storing the arguments *****/
 	rounterLabel = argv[1]; // router label
@@ -78,7 +80,9 @@ int main(int argc,  char *argv[] ) {
 
 	//converting totalNumRouters - string to int
 	int rowCol = atoi(totalNumRouters);
-	// adjacency matrix
+
+	// sequence matrix
+	int seqMat[rowCol][rowCol];
 
 	// dynamic memory allocation for adjacency matrix
 	adjMat = (int **)malloc(rowCol * sizeof(int *));
@@ -90,25 +94,29 @@ int main(int argc,  char *argv[] ) {
 		for ( k = 0; k < rowCol; k++ ) {
 
 			if ( i == k ) {
+				// adjacency matrix
 				adjMat[i][k] = 0;
+				// sequence matrix
+				seqMat[i][k] = 0;
 			} else {
+				// adjacency matrix
 				adjMat[i][k] = inf;
+				// sequence matrix
+				seqMat[i][k] = inf;
 			}
 		}
 	}
 
-printf("matrix check\n");
-	printArray(rowCol, adjMat);
+	if ( debug ) {
+		printf("matrix check\n");
+		printArray(rowCol, adjMat);
+	}
 
 	// combining the filename with path
-	if ( snprintf(FileNameWithPath, sizeof(FileNameWithPath), "%s%s", "nodes-pc/", discoverFile) < 0 ) {
+	if ( snprintf(FileNameWithPath, sizeof(FileNameWithPath), "%s%s", "routers/", discoverFile) < 0 ) {
 		printf("something went wrong with snprintf:");
 		exit(1);
 	}	
-
-	// printing the arguments
-	printf("Testing: %s %s %s %s\n", rounterLabel, portNum, totalNumRouters, discoverFile);
-
 
 	// creating socket
 	if ( (nodeSd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
@@ -116,7 +124,6 @@ printf("matrix check\n");
 		return -1;
 	}
 
-	// DO NOT DELETE THESE
 	// // Get information about client:
 	if ( gethostname(hostname, sizeof(hostname) ) ){
 		printf("Error\n");
@@ -137,13 +144,14 @@ printf("matrix check\n");
 
 	memcpy((void *)&ownAddress.sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
 
-	// DO NOT DELETE IT
-	// printing the hostname, IP & port
-	printf("name: %s\n", hostptr->h_name);
-    printf("addr: [%s]\n", inet_ntoa(ownAddress.sin_addr));
-    printf("port: %d\n",ntohs(ownAddress.sin_port));
-	
-	printf("router Starting service\n");
+	if ( debug ) {
+		// printing the hostname, IP & port
+		printf("name: %s\n", hostptr->h_name);
+	    printf("addr: [%s]\n", inet_ntoa(ownAddress.sin_addr));
+	    printf("port: %d\n",ntohs(ownAddress.sin_port));
+		
+		printf("router Starting service\n");
+	}
 
 	// binding to a specific port
 	if ( bind(nodeSd, (struct sockaddr *) &ownAddress, sizeof(ownAddress) ) < 0 ){
@@ -178,9 +186,6 @@ printf("matrix check\n");
 		/********* LSP create for each record in the file *********/
 
 		// copying source router's label to allLSP
-		// strcpy(allLSP.singleLSP[neighborCounter].source, rounterLabel);
-		// hop counter
-		allLSP.singleLSP[neighborCounter].hop = atoi(totalNumRouters) - 1;
 		// sequence number, initially 1
 		allLSP.singleLSP[neighborCounter].seqNum = 1;
 
@@ -210,7 +215,7 @@ printf("matrix check\n");
 
 
 	// initial sleep
-	printf("initial 5 seconds delay so that every router can up & running.\n");
+	printf("initial %d seconds delay so that every router can up & running.\n", TIMEOUT);
 	sleep(TIMEOUT);
 
 	// assign the number of neighbor in the LSP packet
@@ -229,12 +234,17 @@ printf("matrix check\n");
 		// initial matrix build
 		adjMatrixChange( adjMat, allLSP.source, allLSP.singleLSP[j].label, allLSP.singleLSP[j].cost );
 
-		// printing the values of LSPs
-		printf("%s %d %d %s %s %d %d\n", allLSP.source, allLSP.singleLSP[j].hop, allLSP.singleLSP[j].seqNum, allLSP.singleLSP[j].label, allLSP.singleLSP[j].nodeIP, allLSP.singleLSP[j].nodePort, allLSP.singleLSP[j].cost);
+		seqMatrixChange( rowCol, seqMat, allLSP.source, allLSP.singleLSP[j].label, allLSP.singleLSP[j].seqNum );
+
+		if ( debug ) {
+			// printing the values of LSPs
+			printf("%s %d %s %s %d %d\n", allLSP.source, allLSP.singleLSP[j].seqNum, allLSP.singleLSP[j].label, allLSP.singleLSP[j].nodeIP, allLSP.singleLSP[j].nodePort, allLSP.singleLSP[j].cost);
+		}
 
 		// what if the file don't have IP, have to find out IP from hostname
 		hostptr = gethostbyname(allLSP.singleLSP[j].nodeIP);
 
+		// error checking
 	    if ( hostptr == NULL ){
 	    	perror("NULL when calculating gethostbyname from file hostname:");
 	    	return 0;
@@ -246,32 +256,34 @@ printf("matrix check\n");
 		neighbors[j].sin_port = htons(allLSP.singleLSP[j].nodePort);//PORT NO
 		neighbors[j].sin_addr.s_addr = inet_addr(allLSP.singleLSP[j].nodeIP);//ADDRESS
 
-		// DO NOT DELETE IT
 		memcpy((void *)&neighbors[j].sin_addr, (void *)hostptr->h_addr, hostptr->h_length); 
 
-		printf("name: %s\n", hostptr->h_name);
-    	printf("addr: [%s]\n", inet_ntoa(neighbors[j].sin_addr));
-    	printf("port: %d\n",ntohs(neighbors[j].sin_port));
-
+		if ( debug ) {
+			printf("Neighboring connection information.\n");
+			printf("name: %s\n", hostptr->h_name);
+	    	printf("addr: [%s]\n", inet_ntoa(neighbors[j].sin_addr));
+	    	printf("port: %d\n",ntohs(neighbors[j].sin_port));
+	    }
 		// size of sockaddr_in
 		addrlen = sizeof(neighbors[i]);
 
 		// send "allLSP" to every record of the neighbors
-		// sendRet = sendto( nodeSd, &allLSP, sizeof(allLSP), 0, (struct sockaddr*)&neighbors[j],addrlen);
+		sendRet = sendto( nodeSd, &allLSP, sizeof(allLSP), 0, (struct sockaddr*)&neighbors[j],addrlen);
 
-		// if ( sendRet < 0 ) {
-		// 	perror("something went wrong while sending:");
-		// 	exit(1);
-		// }
+		if ( sendRet < 0 ) {
+			perror("something went wrong while sending:");
+			exit(1);
+		}
 
 	}
 
-exit(1);
-	// printing adjacency matrix so far
-	printArray(rowCol, adjMat);
+	if ( debug ) {
+		// printing adjacency matrix so far
+		printArray(rowCol, adjMat);
+	}
 
 	// receive & send packet
-	floodReceiveWithSelect( nodeSd, neighbors, rowCol, adjMat, neighborCounter );
+	floodReceiveWithSelect( nodeSd, neighbors, rowCol, adjMat, neighborCounter, seqMat, debug );
 
 	/********* start after receive *********
 
@@ -282,34 +294,37 @@ exit(1);
 
 	********** end after receive *********/
 
-	// Final adjacency matrix
-	printArray(rowCol, adjMat);
+	if ( debug ) {
+		// Final adjacency matrix
+		printArray(rowCol, adjMat);
+	}
 
 	// calculating shortest path & printing forwarding table for router
-	djikstra(adjMat, rounterLabel, atoi(totalNumRouters));
+	djikstra(adjMat, rounterLabel, atoi(totalNumRouters), debug);
 
 	// check if dynamic given in the argument
 	if ( dynamic ) {
-		printf("Dynamic is in the argument.\n");
 
 		/********* start if dynamic *********
 			
 			To-do:
-				0. change a path cost
-				1. Make the packet with only one LSP
-				2. send the packet to this router's neighbors 
-				3. other router should wait for any dynamic packet - if no dynamic in the argument
-				4. flooding
-				5. make updated adjacency matrix
-				6. call djikstra() with the updated adjacency matrix
-				7. print the forwarding table
+				0. change a path cost 									- DONE
+				1. Make the packet with only one LSP 					- DONE
+				2. send the packet to this router's neighbors 			- DONE
+				3. other router should wait for any dynamic packet - if no dynamic in the argument - DONE
+				4. flooding 											- DONE
+				5. make updated adjacency matrix 						- DONE
+				6. call djikstra() with the updated adjacency matrix 	- DONE
+				7. print the forwarding table 							- DONE
 
 		********** end if dynamic *********/
 
 		// create a dynamic cost between 1-10
 		srand(time(NULL));   // should only be called once
 		int dynamicCost = ( rand() % 10 ) + 1;
-		printf("dynamicCost: %d\n", dynamicCost);
+
+		if ( debug )
+			printf("dynamicCost: %d\n", dynamicCost);
 
 		/******** 1. Make the packet with only one LSP ********/
 
@@ -332,15 +347,19 @@ exit(1);
 		// add 1 to present sequence number
 		dynamicLSP.singleLSP[0].seqNum++;
 
-		printf("copied allLSP\n");
-		printf("[%d] %s %d %d %s %s %d %d\n", dynamicLSP.numberOfNeighbor, dynamicLSP.source, dynamicLSP.singleLSP[0].hop, dynamicLSP.singleLSP[0].seqNum, dynamicLSP.singleLSP[0].label, dynamicLSP.singleLSP[0].nodeIP, dynamicLSP.singleLSP[0].nodePort, dynamicLSP.singleLSP[0].cost);
+		if ( debug ) {
+			printf("copied allLSP\n");
+			printf("[%d] %s %d %s %s %d %d\n", dynamicLSP.numberOfNeighbor, dynamicLSP.source, dynamicLSP.singleLSP[0].seqNum, dynamicLSP.singleLSP[0].label, dynamicLSP.singleLSP[0].nodeIP, dynamicLSP.singleLSP[0].nodePort, dynamicLSP.singleLSP[0].cost);
+		}
 
 		// update own adjacency matrix
 		adjMatrixChange( adjMat, dynamicLSP.source, dynamicLSP.singleLSP[0].label, dynamicLSP.singleLSP[0].cost );
 
-		// adjacency matrix with dynamic cost
-		printf("adjacency matrix with dynamic cost\n");
-		printArray(rowCol, adjMat);
+		if ( debug ) {
+			// adjacency matrix with dynamic cost
+			printf("adjacency matrix with dynamic cost\n");
+			printArray(rowCol, adjMat);
+		}
 
 		/******** 2. send the packet to this router's neighbors  ********/
 		for ( j = 0; j < neighborCounter; j++ ) {
@@ -369,18 +388,23 @@ exit(1);
 		
 		********** end if not dynamic *********/
 
-	printf("Waiting for any dynamic cost change in router.\n");
+	printf("\nWaiting for any dynamic cost change in router.\n");
 
 	// receive & send packet
-	floodReceiveWithSelect( nodeSd, neighbors, rowCol, adjMat, neighborCounter );
+	floodReceiveWithSelect( nodeSd, neighbors, rowCol, adjMat, neighborCounter, seqMat, debug );
 
 	// printing final adjacency matrix with dynamic cost
 
-	printf("Final adjacency matrix with dynamic cost change\n");
-	printArray(rowCol, adjMat);
+	if ( debug ) {
+		printf("Final adjacency matrix with dynamic cost change\n");
+		printArray(rowCol, adjMat);
+
+		printf("Sequence matrix\n");
+		printArrayArray(rowCol, seqMat);
+	}
 
 	// calculating shortest path & printing forwarding table for router
-	djikstra(adjMat, rounterLabel, atoi(totalNumRouters));
+	djikstra(adjMat, rounterLabel, atoi(totalNumRouters), debug);
 
 
 	
